@@ -1,11 +1,18 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar.jsx";
+import Home from "./pages/Home.jsx";
+import Register from "./pages/Register.jsx";
 
-function App() {
-  return (<h1>Accountable</h1>)
+export default function App() {
+  return (
+    <>
+      <Navbar />
+      <main className="page">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      </main>
+    </>
+  );
 }
-
-export default App

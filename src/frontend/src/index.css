@@ -26,3 +26,8 @@ body { font-family: system-ui, sans-serif; background: #f6f7fb; color: #1a1a2e; 
 .auth-card button:disabled { opacity: 0.6; cursor: default; }
 .error { color: #dc2626; margin-top: 0.75rem; }
 .success { color: #16a34a; margin-top: 0.75rem; }
+.nav-links { display: flex; align-items: center; gap: 1rem; }
+.nav-link { color: inherit; text-decoration: none; }
+button.nav-button { border: none; font-size: 1rem; cursor: pointer; }
+.switch { margin-top: 1rem; font-size: 0.9rem; }
+.auth-card p { margin-top: 0.5rem; }

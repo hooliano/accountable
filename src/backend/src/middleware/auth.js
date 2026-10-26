@@ -1,0 +1,21 @@
+import jwt from "jsonwebtoken";
+
+export function requireAuth(req, res, next) {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ error: "Not logged in." });
+
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { id: payload.sub, role: payload.role };
+    next();
+  } catch {
+    return res.status(401).json({ error: "Session expired. Please log in again." });
+  }
+}
+
+export function requireAdmin(req, res, next) {
+  if (req.user?.role !== "ADMIN") {
+    return res.status(403).json({ error: "Admins only." });
+  }
+  next();
+}

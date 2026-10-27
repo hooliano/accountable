@@ -11,6 +11,11 @@ enum Role {
   ADMIN
 }
 
+enum Permission {
+  EDITOR
+  VIEWER
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
@@ -18,4 +23,36 @@ model User {
   passwordHash String
   role         Role     @default(MEMBER)
   createdAt    DateTime @default(now())
+
+  ownedProjects  Project[]             @relation("ProjectOwner")
+  collaborations ProjectCollaborator[]
+}
+
+model Project {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  ownerId Int
+  owner   User @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  collaborators ProjectCollaborator[]
+
+  @@index([ownerId])
+}
+
+model ProjectCollaborator {
+  projectId  Int
+  userId     Int
+  permission Permission @default(VIEWER)
+  addedAt    DateTime   @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+  @@index([userId])
 }

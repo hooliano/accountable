@@ -1,10 +1,12 @@
 import { useState } from "react";
-import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Register() {
+  const { register } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ username: "", email: "", password: "" });
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
@@ -14,12 +16,10 @@ export default function Register() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
-    setSuccess("");
     setLoading(true);
     try {
-      const res = await axios.post("/api/auth/register", form);
-      setSuccess(`Account created for ${res.data.user.username}!`);
-      setForm({ username: "", email: "", password: "" });
+      await register(form);
+      navigate("/profile");
     } catch (err) {
       setError(err.response?.data?.error || "Registration failed.");
     } finally {
@@ -39,7 +39,7 @@ export default function Register() {
         </button>
       </form>
       {error && <p className="error">{error}</p>}
-      {success && <p className="success">{success}</p>}
+      <p className="switch">Have an account? <Link to="/login">Log in</Link></p>
     </section>
   );
 }

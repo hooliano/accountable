@@ -176,3 +176,68 @@ export async function removeFriend(req, res) {
     return res.status(500).json({ error: "Something went wrong." });
   }
 }
+
+export async function searchUsers(req, res) {
+  try {
+    const me = req.user.id;
+    const q = (req.query.q || "").trim();
+    if (q.length < 2) {
+      return res.status(400).json({ error: "Search must be at least 2 characters." });
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        username: { contains: q, mode: "insensitive" },
+        NOT: { id: me },
+      },
+      select: PUBLIC_USER,
+      orderBy: { username: "asc" },
+      take: 10,
+    });
+    return res.json({ users });
+  } catch (err) {
+    console.error("Search users error:", err);
+    return res.status(500).json({ error: "Something went wrong." });
+  }
+}
+
+export async function getFriendProjects(req, res) {
+  try {
+    const me = req.user.id;
+    const friendId = parseId(req.params.userId);
+    if (!friendId) return res.status(400).json({ error: "Invalid user id." });
+
+    if (!(await areFriends(me, friendId))) {
+      return res.status(403).json({ error: "You can only view your friends' projects." });
+    }
+
+    const projects = await prisma.project.findMany({
+      where: { ownerId: friendId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        dueDate: true,
+        createdAt: true,
+        tasks: { select: { status: true } },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const withProgress = projects.map(({ tasks, ...project }) => {
+      const total = tasks.length;
+      const done = tasks.filter((t) => t.status === "DONE").length;
+      return {
+        ...project,
+        taskCount: total,
+        completedCount: done,
+        progress: total ? Math.round((done / total) * 100) : 0,
+      };
+    });
+
+    return res.json({ projects: withProgress });
+  } catch (err) {
+    console.error("Friend projects error:", err);
+    return res.status(500).json({ error: "Something went wrong." });
+  }
+}

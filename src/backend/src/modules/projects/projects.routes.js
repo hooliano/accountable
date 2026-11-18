@@ -257,15 +257,26 @@ router.post("/:projectId/collaborators", async (req, res) => {
 router.delete("/:projectId/collaborators/:userId", async (req, res) => {
   const project = await projectAccess(req, "manage");
   const userId = id(req.params.userId);
-  await prisma.$transaction([
-    prisma.task.updateMany({
+  if (
+    userId === project.ownerId ||
+    !project.collaborators.some((collaborator) => collaborator.userId === userId)
+  ) {
+    throw fail(404, "Project collaborator not found.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const { count } = await tx.projectCollaborator.deleteMany({
+      where: { projectId: project.id, userId },
+    });
+    if (count === 0) {
+      throw fail(404, "Project collaborator not found.");
+    }
+
+    await tx.task.updateMany({
       where: { projectId: project.id, assigneeId: userId },
       data: { assigneeId: null },
-    }),
-    prisma.projectCollaborator.deleteMany({
-      where: { projectId: project.id, userId },
-    }),
-  ]);
+    });
+  });
   res.sendStatus(204);
 });
 

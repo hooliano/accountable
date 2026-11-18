@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import Home from "./pages/Home.jsx";
 import Register from "./pages/Register.jsx";
+import Profile from "./pages/Profile.jsx";
 import Project from "./pages/Project.jsx";
 import { api, errorMessage } from "./api.js";
 
@@ -78,6 +79,10 @@ export default function App() {
                   <Register key="login" login onAuth={setUser} />
                 )
               }
+            />
+            <Route
+              path="/profile"
+              element={user ? <Profile user={user} /> : <Navigate to="/login" replace />}
             />
             <Route
               path="/projects/:projectId"

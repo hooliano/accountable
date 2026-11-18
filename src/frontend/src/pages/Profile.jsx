@@ -1,7 +1,4 @@
-import { useAuth } from "../context/AuthContext.jsx";
-
-export default function Profile() {
-  const { user } = useAuth();
+export default function Profile({ user }) {
   return (
     <section className="auth-card">
       <h2>{user.username}</h2>

@@ -128,3 +128,51 @@ export async function deleteRequest(req, res) {
     return res.status(500).json({ error: "Something went wrong." });
   }
 }
+
+export async function listFriends(req, res) {
+  try {
+    const me = req.user.id;
+    const rows = await prisma.friendship.findMany({
+      where: { status: "ACCEPTED", OR: [{ requesterId: me }, { addresseeId: me }] },
+      include: {
+        requester: { select: PUBLIC_USER },
+        addressee: { select: PUBLIC_USER },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    const friends = rows.map((f) => ({
+      ...(f.requesterId === me ? f.addressee : f.requester),
+      friendsSince: f.updatedAt,
+    }));
+    return res.json({ friends });
+  } catch (err) {
+    console.error("List friends error:", err);
+    return res.status(500).json({ error: "Something went wrong." });
+  }
+}
+
+export async function removeFriend(req, res) {
+  try {
+    const me = req.user.id;
+    const friendId = parseId(req.params.userId);
+    if (!friendId) return res.status(400).json({ error: "Invalid user id." });
+
+    const result = await prisma.friendship.deleteMany({
+      where: {
+        status: "ACCEPTED",
+        OR: [
+          { requesterId: me, addresseeId: friendId },
+          { requesterId: friendId, addresseeId: me },
+        ],
+      },
+    });
+    if (result.count === 0) {
+      return res.status(404).json({ error: "You're not friends with this user." });
+    }
+    return res.json({ message: "Friend removed." });
+  } catch (err) {
+    console.error("Remove friend error:", err);
+    return res.status(500).json({ error: "Something went wrong." });
+  }
+}

@@ -5,6 +5,7 @@ import Home from "./pages/Home.jsx";
 import Register from "./pages/Register.jsx";
 import Profile from "./pages/Profile.jsx";
 import Project from "./pages/Project.jsx";
+import Friends from "./pages/Friends.jsx";
 import { api, errorMessage } from "./api.js";
 
 export default function App() {
@@ -87,6 +88,10 @@ export default function App() {
             <Route
               path="/projects/:projectId"
               element={user ? <Project /> : <Navigate to="/login" replace />}
+            />
+            <Route
+              path="/friends"
+              element={user ? <Friends /> : <Navigate to="/login" replace />}
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

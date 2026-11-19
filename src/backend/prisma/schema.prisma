@@ -22,6 +22,11 @@ enum TaskStatus {
   DONE
 }
 
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+}
+
 model User {
   id           Int      @id @default(autoincrement())
   username     String   @unique
@@ -30,10 +35,12 @@ model User {
   role         Role     @default(MEMBER)
   createdAt    DateTime @default(now())
 
-  ownedProjects  Project[]             @relation("ProjectOwner")
-  collaborations ProjectCollaborator[]
-  createdTasks   Task[]                @relation("TaskCreator")
-  assignedTasks  Task[]                @relation("TaskAssignee")
+  ownedProjects          Project[]             @relation("ProjectOwner")
+  collaborations         ProjectCollaborator[]
+  createdTasks           Task[]                @relation("TaskCreator")
+  assignedTasks          Task[]                @relation("TaskAssignee")
+  sentFriendRequests     Friendship[]          @relation("FriendRequester")
+  receivedFriendRequests Friendship[]          @relation("FriendAddressee")
 }
 
 model Project {
@@ -87,4 +94,18 @@ model Task {
   assignee   User? @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
 
   @@index([projectId, status, position])
+}
+
+model Friendship {
+  requesterId Int
+  addresseeId Int
+  status      FriendshipStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  requester User @relation("FriendRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee User @relation("FriendAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@id([requesterId, addresseeId])
+  @@index([addresseeId, status])
 }

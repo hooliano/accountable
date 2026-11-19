@@ -9,6 +9,7 @@ export default function Navbar({ user, onLogout }) {
       <div className="actions">
         {user ? (
           <>
+            <Link to="/friends">Friends</Link>
             <Link to="/profile">{user.username}</Link>
             <button className="secondary" onClick={onLogout}>
               Log out

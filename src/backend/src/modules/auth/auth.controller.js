@@ -4,7 +4,16 @@ import prisma from "../../lib/prisma.js";
 
 const SALT_ROUNDS = 10;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const SAFE_USER = { id: true, username: true, email: true, role: true, createdAt: true };
+
+const SAFE_USER = {
+  id: true,
+  username: true,
+  email: true,
+  role: true,
+  createdAt: true,
+  displayName: true,
+  avatarUrl: true,
+};
 
 function setAuthCookie(res, user) {
   const token = jwt.sign(
@@ -90,4 +99,59 @@ export async function me(req, res) {
   });
   if (!user) return res.status(404).json({ error: "User not found." });
   return res.json({ user });
+}
+
+export async function updateProfile(req, res) {
+  const { displayName, avatarUrl } = req.body ?? {};
+
+  if (typeof displayName !== "string" || typeof avatarUrl !== "string") {
+    return res.status(400).json({
+      error: "Display name and image URL must be text.",
+    });
+  }
+
+  const name = displayName.trim();
+  const image = avatarUrl.trim();
+
+  if (name.length > 60 || image.length > 2048) {
+    return res.status(400).json({
+      error: "Display name or image URL is too long.",
+    });
+  }
+
+  if (image) {
+    try {
+      const url = new URL(image);
+
+      if (url.protocol !== "https:" || url.username || url.password) {
+        throw new Error("Invalid image URL");
+      }
+    } catch {
+      return res.status(400).json({
+        error: "Enter a valid HTTPS image URL.",
+      });
+    }
+  }
+
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        displayName: name || null,
+        avatarUrl: image || null,
+      },
+      select: SAFE_USER,
+    });
+
+    return res.json({ user });
+  } catch (err) {
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    console.error("Profile update error:", err);
+    return res.status(500).json({
+      error: "Could not update profile.",
+    });
+  }
 }
